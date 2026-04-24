@@ -3975,6 +3975,7 @@ input, select, textarea {
 	padding: 0 1rem;
 	background: linear-gradient(45deg, var(--color-blue), var(--color-light-blue));
 	padding: 3rem 0;
+	height: 50rem;
 }
 
 .timeline-wrapper {
