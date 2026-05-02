@@ -1,6 +1,7 @@
 async function loadTimeline() {
   try {
-    const res = await fetch("https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/main.json");
+    
+    const res = await fetch("https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/events.json");
     const data = await res.json();
 
     renderTimeline(data.updates);
@@ -18,24 +19,26 @@ function renderTimeline(updates) {
       month: "short",
       year: "numeric"
     });
-
-    var text = "Научи повече"
+    
+    var urlText = "Научи повече"
     var url = item.url
     if (!url){
-        console.log(item);
         url = `http://luma.com/event/${item.luma_event_id}`
-        text = "Регистрирай се!"
+        urlText = "Регистрирай се"
     }
-    
 
     return `
       <li>
         <div class="timeline-time">
             ${formattedDate}
         </div>
+        <div class="timeline-description"></div>
+
+        ${DOMPurify.sanitize(marked.parse(item.description || ""))}
+
         <p>
           <a href="${url}" target="_blank">
-            ${text}
+            ${urlText}!
           </a>
         </p>
       </li>
@@ -45,7 +48,7 @@ function renderTimeline(updates) {
   container.innerHTML = `
     <div class="timeline-container">
       <div class="timeline-wrapper">
-        <h1>Стани част от промяната!</h1>
+        <h1 style="font-size: 2rem">Стани част от промяната!</h1>
         <ul class="timeline-sessions">
           ${itemsHTML}
         </ul>
