@@ -1,6 +1,6 @@
 async function loadLumaEvent() {
   try {
-    const res = await fetch("https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/main.json");
+    const res = await fetch("https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/events.json");
     const data = await res.json();
 
     const latest = data.updates[0];

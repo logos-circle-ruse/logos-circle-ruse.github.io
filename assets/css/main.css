@@ -3975,19 +3975,20 @@ input, select, textarea {
 	padding: 0 1rem;
 	background: linear-gradient(45deg, var(--color-blue), var(--color-light-blue));
 	padding: 3rem 0;
-	height: 50rem;
 }
 
 .timeline-wrapper {
 	background: var(--color-white);
 	padding: 2rem;
 	border-radius: 15px;
+	width: 70%;
 }
 
 .timeline-container h1 {
 	color: var(--color-dark-blue);
 	font-size: 1.1rem;
 	font-family: sans-serif;
+	text-align: center;
 }
 
 .timeline-sessions {
@@ -4054,4 +4055,9 @@ input, select, textarea {
 	.timeline-container p {
 		font-size: 0.9rem;
   	}
+}
+
+
+#timeline *:not(a):not(a *) {
+  color: black;
 }
