@@ -3414,7 +3414,7 @@ input, select, textarea {
 		#banner:after {
 			pointer-events: none;
 			background-color: #000000;
-			opacity: 0.5;
+			opacity: 0.67;
 			content: '';
 			display: block;
 			height: 100%;
@@ -3592,7 +3592,7 @@ input, select, textarea {
 /* Main */
 
 	#main {
-		background-color: #2a2f4a;
+		/* background-color: #2a2f4a; */
 	}
 
 		#main > * {
@@ -4057,7 +4057,91 @@ input, select, textarea {
   	}
 }
 
-
 #timeline *:not(a):not(a *) {
   color: black;
+}
+
+#pie-chart-controls {
+    text-align: center;
+    margin: 2.5% 0 5%;
+}
+
+/* 🔥 FIX: remove fixed height + fit-content */
+#pie-chart {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 0 auto;
+    max-width: 50%;
+}
+
+/* Wrap chart + legend together (important) */
+.chart-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Pie chart */
+#pie-chart .chart-container {
+    position: relative;
+    width: 60%;
+	max-width: 600px;
+    aspect-ratio: 1; /* 🔥 better than fixed height */
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+/* Center label */
+#pie-chart .center-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #2a2f4a;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Legend */
+#pie-chart .legend {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#pie-chart .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#pie-chart .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+}
+
+/* Description */
+#project-description {
+    min-width: 300px;
+    max-width: 600px;
+}
+
+/* Fix markdown spacing */
+#project-description ul {
+    padding-left: 1.2em;
+}
+
+#project-description li {
+    margin-bottom: 0.4em;
 }

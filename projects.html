@@ -6,7 +6,7 @@
 -->
 <html>
 	<head>
-		<title>Събития | Logos Circle Ruse</title>
+		<title>Проекти | Logos Circle Ruse</title>
 		<link rel="icon" type="image/png" sizes="any" href="./images/banner.png">
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -31,7 +31,6 @@
 							<li><a href="index.html">Начало</a></li>
 							<li><a href="about.html">За нас</a></li>
 							<li><a href="events.html">Събития</a></li>
-							<li><a href="projects.html">Проекти</a></li>
 						</ul>
 						<ul class="actions stacked">
 							<li><a href="https://logos-circle-ruse.github.io/transparent_ruse/" class="button primary fit">Сподели Проблем</a></li>
@@ -47,31 +46,50 @@
 								<img src="images/circle.png" alt="" />
 							</span>
 							<header class="major">
-								<h1>Събития</h1>
+								<h1>Проекти</h1>
 							</header>
+							<div class="content">
+								<p>
+									Следете прогреса на нашите проекти докато ги правим!
+								</p>
+							</div>
 							
 						</div>
 					</section>
 
 				<!-- Main -->
 					<div id="main">
-
-						<!-- One -->
+						
 						<section id="one">
-							<div class="inner">
-								<header class="major">
-									<h2>Какво правим в Русе?</h2>
-								</header>
-								<p>
-									Ние сме локалният Logos кръг. Организираме се напълно доброволно, за да приложим тези глобални идеали на местно ниво. 
-									Работим заедно, учим заедно и използваме технологиите, за да направим града ни по-добро място.
-									<strong>Make Ruse Great Again!</strong>
+							<div id="pie-chart-controls">
+								
+							</div>
+							
+							<div style="text-align: center;">
+								<h2 id="selected-project"></h2>
+								<p style="font-size: 1.5rem;">
+									Прогрес: <span id="project-progress"></span> <br>
+									Екип: <span id="project-members"></span> <br>
+									<div style="font-size: 2rem; margin-left: 25%; margin-right: 25%;">
+										Разпределение по различни категории:
+									</div>
 								</p>
 							</div>
-						</section>
 
-						<!-- Two -->
-						<div id="timeline"></div>
+							<div id="pie-chart">
+								<div class="chart-container">
+									<div class="center-label">100%</div>
+								</div>
+
+								<div class="legend" id="pie-chart-legend">
+									
+								</div>
+
+								<div id="project-description">
+									
+								</div>
+							</div>
+						</section>
 
 					</div>
 
@@ -92,8 +110,8 @@
 		<!-- Utils -->
 		<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-		<script src="assets/js/timeline.js"></script>
 		<script src="assets/js/components/footer.js"></script>
+		<script src="assets/js/projects.js"></script>
 
 	</body>
 </html>
