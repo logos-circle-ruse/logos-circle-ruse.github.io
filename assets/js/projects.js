@@ -26,7 +26,7 @@ async function loadProjects() {
 
 function selectProject(item) {
     const projectProgress = document.getElementById("project-progress");
-    projectProgress.innerHTML = `${item.completed_pct}%`
+    projectProgress.innerHTML = `${item.completed_pct.toFixed(2)}%`
     
     const projectMembers = document.getElementById("project-members");
     projectMembers.innerHTML = `${item.members}`
