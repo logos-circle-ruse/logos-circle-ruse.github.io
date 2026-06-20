@@ -2815,7 +2815,7 @@ input, select, textarea {
 			}
 
 			.tiles article:after {
-				background-color: rgba(36, 41, 67, 0.45);
+				background-color: rgba(36, 41, 67, 0.67);
 				content: '';
 				display: block;
 				height: 100%;
@@ -4064,6 +4064,22 @@ input, select, textarea {
 #pie-chart-controls {
     text-align: center;
     margin: 2.5% 0 5%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+#pie-chart-controls button:not(:disabled) {
+    opacity: 0.5;
+}
+
+#pie-chart-controls button:disabled {
+    background-color: #ffffff;
+    box-shadow: inset 0 0 0 2px #ffffff;
+    color: #000000;
+    opacity: 1;
+    cursor: default;
 }
 
 /* 🔥 FIX: remove fixed height + fit-content */
