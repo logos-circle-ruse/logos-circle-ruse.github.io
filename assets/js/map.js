@@ -1,29 +1,60 @@
-const CATEGORY_COLOURS = {
-	breakfast: "#F0B69E",
-	lunch: "#79A1E8",
-	dinner: "#2a2f4a",
-	drinks: "#95B77F",
-	"café": "#a9746e",
-	"fast food": "#e67e22"
+const DATASETS = {
+	food: {
+		url: "https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/interactive-ruse/food.json",
+		groupBy: "category",
+		tagColours: {
+			breakfast: "#F0B69E",
+			lunch: "#79A1E8",
+			dinner: "#2a2f4a",
+			drinks: "#95B77F",
+			"café": "#a9746e",
+			"fast food": "#e67e22",
+			asian: "#c0392b",
+			banitsa: "#BBB47D",
+			brunch: "#DACFC5",
+			burger: "#d35400",
+			danube: "#3498db",
+			dessert: "#B9CDAC",
+			doner: "#8e44ad",
+			fish: "#2980b9",
+			meat: "#7f2f22",
+			pastry: "#e8c39e",
+			pizza: "#f39c12",
+			tavern: "#8e5a3c",
+			view: "#27ae60"
+		}
+	},
+	sightseeing: {
+		url: "https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/interactive-ruse/sightseeing.json",
+		groupBy: null,
+		tagColours: {
+			museum: "#79A1E8",
+			history: "#2a2f4a",
+			culture: "#a9746e",
+			literature: "#8e44ad",
+			architecture: "#95B77F",
+			art: "#e67e22",
+			nature: "#27ae60",
+			ecology: "#2ecc71",
+			"historical site": "#7f2f22",
+			roman: "#c0392b",
+			fortress: "#8e5a3c",
+			monument: "#3498db",
+			memorial: "#34495e",
+			ethnography: "#BBB47D",
+			transport: "#f39c12",
+			commercial: "#d35400",
+			school: "#e8c39e",
+			"public building": "#5d6d7e",
+			commerce: "#b9770e",
+			bank: "#1abc9c",
+			religious: "#9b59b6",
+			industry: "#7f8c8d",
+			insurance: "#2980b9",
+			theater: "#c2185b"
+		}
+	}
 };
-
-const TAG_COLOURS = {
-	...CATEGORY_COLOURS,
-	asian: "#c0392b",
-	banitsa: "#BBB47D",
-	brunch: "#DACFC5",
-	burger: "#d35400",
-	danube: "#3498db",
-	dessert: "#B9CDAC",
-	doner: "#8e44ad",
-	fish: "#2980b9",
-	meat: "#7f2f22",
-	pastry: "#e8c39e",
-	pizza: "#f39c12",
-	tavern: "#8e5a3c",
-	view: "#27ae60"
-};
-
 const DEFAULT_COLOUR = "#79A1E8";
 
 function markerIcon(colour) {
@@ -44,19 +75,30 @@ function markerIcon(colour) {
 	});
 }
 
-async function loadPlaces() {
-	const res = await fetch("https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/interactive-ruse/food.json");
+// Generous bounding box around Ruse, Bulgaria — used to reject bad/mistyped
+// coordinates (e.g. a data entry pointing at a different city) so a single
+// outlier can't blow out the map's zoom/bounds for everyone else.
+const RUSE_BOUNDS = { minLat: 43.6, maxLat: 44.1, minLon: 25.5, maxLon: 26.4 };
+
+async function loadPlaces(url) {
+	const res = await fetch(url);
 	const data = await res.json();
-	return data.filter(place => place.latitude != null && place.longitude != null);
+	return data.filter(place =>
+		place.latitude != null && place.longitude != null &&
+		place.latitude >= RUSE_BOUNDS.minLat && place.latitude <= RUSE_BOUNDS.maxLat &&
+		place.longitude >= RUSE_BOUNDS.minLon && place.longitude <= RUSE_BOUNDS.maxLon
+	);
 }
 
 function buildPopup(place) {
-	const tags = (place.tags || []).join(", ");
 	const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
+	const tags = (place.tags || []).join(", ");
+
 	return DOMPurify.sanitize(`
 		<h3>${place.name}</h3>
 		<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="popup-maps-link">How to get there?</a>
-		<div class="popup-tags">${tags}</div>
+		${place.short_description ? `<div class="popup-description">${place.short_description}</div>` : ""}
+		${!place.short_description ? `<div class="popup-tags">${tags}</div>` : ""}
 	`, { ADD_ATTR: ["target"] });
 }
 
@@ -149,66 +191,65 @@ function buildTagSearch(container, allTags, onChange) {
 	});
 }
 
-async function initMap() {
-	const map = L.map("map-container");
+function toTitleCase(text) {
+	return text.replace(/\w\S*/g, word => word[0].toUpperCase() + word.slice(1));
+}
 
-	L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-		maxZoom: 19
-	}).addTo(map);
+async function loadDataset(datasetName, map, layerGroup) {
+	const config = DATASETS[datasetName];
+	const tagColours = config.tagColours;
+	const listContainer = document.getElementById("map-list");
+	listContainer.innerHTML = `<p class="no-results">Loading…</p>`;
 
-	const places = await loadPlaces();
-	const entriesByCategory = new Map();
+	const places = await loadPlaces(config.url);
 	const allTags = new Set();
+	const entriesByGroup = new Map();
 
 	places.forEach(place => {
-		const categories = place.category || [];
-		const primaryCategory = categories[0];
-		const colour = CATEGORY_COLOURS[primaryCategory] || DEFAULT_COLOUR;
+		const groupKeys = config.groupBy ? (place[config.groupBy] || []) : ["__all__"];
+		const primaryKey = config.groupBy ? groupKeys[0] : (place.tags || [])[0];
+		const colour = tagColours[primaryKey] || DEFAULT_COLOUR;
+
 		const marker = L.marker([place.latitude, place.longitude], {
 			icon: markerIcon(colour)
 		}).bindPopup(buildPopup(place));
 
-		categories.forEach(category => {
-			if (!entriesByCategory.has(category)) {
-				entriesByCategory.set(category, []);
+		groupKeys.forEach(key => {
+			if (!entriesByGroup.has(key)) {
+				entriesByGroup.set(key, []);
 			}
-			entriesByCategory.get(category).push({ place, marker });
+			entriesByGroup.get(key).push({ place, marker });
 		});
 
 		(place.tags || []).forEach(tag => allTags.add(tag));
 	});
 
-	const layerGroup = L.layerGroup().addTo(map);
-	const listContainer = document.getElementById("map-list");
-
-	function toTitleCase(text) {
-		return text.replace(/\w\S*/g, word => word[0].toUpperCase() + word.slice(1));
-	}
-
-	function buildTable(categoryName, entries) {
-		const colour = CATEGORY_COLOURS[categoryName] || DEFAULT_COLOUR;
+	function buildTable(groupName, entries) {
+		const groupColour = tagColours[groupName] || DEFAULT_COLOUR;
 		const rows = entries
 			.map(({ place }) => place)
 			.sort((a, b) => a.name.localeCompare(b.name));
 
 		return `
-			<h3 style="color: white">${toTitleCase(categoryName)}</h3>
+			${config.groupBy ? `<h3 style="color: white">${toTitleCase(groupName)}</h3>` : ""}
 			<table>
 				<thead>
 					<tr><th>Name</th><th>Tags</th></tr>
 				</thead>
 				<tbody>
 					${rows.map(place => {
+						const rowColour = config.groupBy
+							? groupColour
+							: (tagColours[(place.tags || [])[0]] || DEFAULT_COLOUR);
 						const tags = (place.tags || [])
 							.map(tag => {
-								const tagColour = TAG_COLOURS[tag] || DEFAULT_COLOUR;
+								const tagColour = tagColours[tag] || DEFAULT_COLOUR;
 								return `<span class="tag-pill" style="background:${tagColour}">${tag}</span>`;
 							})
 							.join("");
 						return `
 							<tr>
-								<td class="place-name" style="background:${colour}">${place.name}</td>
+								<td class="place-name" style="background:${rowColour}">${place.name}</td>
 								<td><div class="tag-list">${tags}</div></td>
 							</tr>
 						`;
@@ -227,16 +268,16 @@ async function initMap() {
 	function applyFilter(selectedTags) {
 		layerGroup.clearLayers();
 
-		const categories = [...entriesByCategory.keys()].sort();
+		const groups = [...entriesByGroup.keys()].sort();
 
-		const html = categories.map(cat => {
-			const entries = entriesByCategory.get(cat)
+		const html = groups.map(group => {
+			const entries = entriesByGroup.get(group)
 				.filter(({ place }) => matchesTags(place, selectedTags));
 
 			if (entries.length === 0) return "";
 
 			entries.forEach(({ marker }) => layerGroup.addLayer(marker));
-			return buildTable(cat, entries);
+			return buildTable(group, entries);
 		}).join("");
 
 		listContainer.innerHTML = html
@@ -251,6 +292,33 @@ async function initMap() {
 
 	const sortedTags = [...allTags].sort();
 	buildTagSearch(document.getElementById("map-filters"), sortedTags, applyFilter);
+}
+
+function buildDatasetToggle(map, layerGroup) {
+	const buttons = document.querySelectorAll("#dataset-toggle button");
+
+	buttons.forEach(button => {
+		button.addEventListener("click", () => {
+			if (button.classList.contains("active")) return;
+			buttons.forEach(b => b.classList.remove("active"));
+			button.classList.add("active");
+			loadDataset(button.dataset.dataset, map, layerGroup);
+		});
+	});
+}
+
+async function initMap() {
+	const map = L.map("map-container");
+
+	L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+		maxZoom: 19
+	}).addTo(map);
+
+	const layerGroup = L.layerGroup().addTo(map);
+
+	buildDatasetToggle(map, layerGroup);
+	await loadDataset("food", map, layerGroup);
 
 	document.getElementById("map-container").classList.add("view-hidden");
 	buildViewToggle(map);

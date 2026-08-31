@@ -58,6 +58,39 @@
 				color: var(--color-white);
 			}
 
+			#dataset-toggle {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 0.5em;
+				margin-bottom: 1.5em;
+			}
+
+			#dataset-toggle button {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				line-height: 1;
+				border-radius: 20px;
+				border: 2px solid var(--color-blue);
+				background: var(--color-white);
+				color: var(--color-dark-blue);
+				padding: 0.7em 1.1em 0.6em;
+				font-size: 0.85em;
+				font-weight: 600;
+				cursor: pointer;
+				transition: background-color 0.2s ease, color 0.2s ease;
+			}
+
+			#dataset-toggle button:hover {
+				background: var(--color-light-blue);
+			}
+
+			#dataset-toggle button.active {
+				background: var(--color-blue);
+				color: var(--color-white);
+			}
+
 			#map-filters {
 				max-width: 500px;
 				margin: 0 auto 1.5em;
@@ -140,6 +173,10 @@
 				margin: 0 0 1.5em 0;
 			}
 
+			.leaflet-popup-content {
+				min-width: 220px;
+			}
+
 			.leaflet-popup-content h3 {
 				margin: 0 0 0.25em 0;
 				font-size: 1.1em;
@@ -156,6 +193,13 @@
 			.leaflet-popup-content .popup-tags {
 				color: #777;
 				font-size: 0.85em;
+			}
+
+			.leaflet-popup-content .popup-description {
+				color: #555;
+				font-size: 0.85em;
+				line-height: 1.5;
+				margin-bottom: 0.5em;
 			}
 
 			#map-list {
@@ -259,6 +303,11 @@
 
 						<section id="one">
 							<div class="inner">
+								<div id="dataset-toggle">
+									<button data-dataset="food" class="active">Food &amp; Drinks</button>
+									<button data-dataset="sightseeing">Sightseeing</button>
+								</div>
+								<hr class="view-separator" />
 								<div id="view-toggle">
 									<button data-view="list" class="active">List</button>
 									<button data-view="map">Map</button>
@@ -291,7 +340,7 @@
 									<h2>Know a Place We're Missing?</h2>
 								</header>
 								<p>
-									If you'd like to suggest a new location to add to the map, <a href="#">fill out this form</a>.
+									If you'd like to suggest a new location to add to the map, <a href="https://docs.google.com/forms/d/e/1FAIpQLSerE7ZOCm5GfYbD8EhIkam3YokFqII0qZaEsE7hlLQT8CZpAw/viewform?usp=publish-editor" target="_blank">fill out this form</a>.
 								</p>
 							</div>
 						</section>
