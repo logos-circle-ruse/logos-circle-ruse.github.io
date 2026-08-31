@@ -1,0 +1,572 @@
+<!DOCTYPE HTML>
+<!--
+	Forty by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Interactive Ruse</title>
+		<link rel="icon" type="image/png" sizes="any" href="./images/banner.png">
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+
+		<!-- Leaflet -->
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+			integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+		<style>
+			#map-container {
+				width: 100%;
+				height: 65vh;
+				min-height: 420px;
+				border-radius: 4px;
+				overflow: hidden;
+			}
+
+			#view-toggle {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 0.5em;
+				margin-bottom: 1.5em;
+			}
+
+			#view-toggle button,
+			#dataset-toggle button {
+				width: 200px;
+			}
+
+			#view-toggle button {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				line-height: 1;
+				border-radius: 20px;
+				border: 2px solid var(--color-blue);
+				background: var(--color-white);
+				color: var(--color-dark-blue);
+				padding: 0.7em 1.1em 0.6em;
+				font-size: 0.85em;
+				font-weight: 600;
+				cursor: pointer;
+				transition: background-color 0.2s ease, color 0.2s ease;
+			}
+
+			#view-toggle button:hover {
+				background: var(--color-light-blue);
+			}
+
+			#view-toggle button.active {
+				background: var(--color-blue);
+				color: var(--color-white);
+			}
+
+			#dataset-toggle {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 0.5em;
+				margin-bottom: 1.5em;
+			}
+
+			#dataset-toggle button {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				line-height: 1;
+				border-radius: 20px;
+				border: 2px solid var(--color-blue);
+				background: var(--color-white);
+				color: var(--color-dark-blue);
+				padding: 0.7em 1.1em 0.6em;
+				font-size: 0.85em;
+				font-weight: 600;
+				cursor: pointer;
+				transition: background-color 0.2s ease, color 0.2s ease;
+			}
+
+			#dataset-toggle button:hover {
+				background: var(--color-light-blue);
+			}
+
+			#dataset-toggle button.active {
+				background: var(--color-blue);
+				color: var(--color-white);
+			}
+
+			@media (max-width: 670px) {
+				#view-toggle,
+				#dataset-toggle {
+					flex-direction: column;
+					align-items: center;
+				}
+
+				#view-toggle button,
+				#dataset-toggle button {
+					width: 100%;
+					max-width: 260px;
+				}
+			}
+
+			#map-filters {
+				max-width: 500px;
+				margin: 0 auto 1.5em;
+			}
+
+			#tag-search-box {
+				position: relative;
+			}
+
+			#tag-search-input {
+				width: 100%;
+				box-sizing: border-box;
+				padding: 0.7em 1em;
+				border-radius: 20px;
+				border: 2px solid var(--color-blue);
+				font-size: 0.9em;
+				font-family: inherit;
+			}
+
+			#tag-search-input:focus {
+				outline: none;
+				border-color: var(--color-dark-blue);
+			}
+
+			#tag-search-dropdown {
+				position: absolute;
+				top: calc(100% + 0.4em);
+				left: 0;
+				right: 0;
+				max-height: 220px;
+				overflow-y: auto;
+				background: var(--color-white);
+				border: 1px solid var(--color-beige);
+				border-radius: 10px;
+				box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+				z-index: 500;
+			}
+
+			.tag-search-option {
+				padding: 0.6em 1em;
+				cursor: pointer;
+				text-align: left;
+				color: var(--color-dark-blue);
+			}
+
+			.tag-search-option:hover {
+				background: var(--color-light-blue);
+			}
+
+			#tag-search-selected {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 0.4em;
+				margin-top: 0.75em;
+			}
+
+			.tag-search-pill {
+				border: none;
+				border-radius: 14px;
+				background: var(--color-blue);
+				color: var(--color-white);
+				padding: 0.3em 0.8em;
+				font-size: 0.8em;
+				cursor: pointer;
+			}
+
+			.no-results {
+				text-align: center;
+				color: #777;
+			}
+
+			.view-hidden {
+				display: none !important;
+			}
+
+			.view-separator {
+				border: 0;
+				border-top: 1px solid var(--color-beige);
+				margin: 0 0 1.5em 0;
+			}
+
+			.leaflet-popup-content {
+				min-width: 220px;
+				font-size: 1.15em;
+			}
+
+			.leaflet-popup-content h3 {
+				margin: 0 0 0.25em 0;
+				font-size: 1.3em;
+				color: var(--color-dark-blue);
+			}
+
+			.leaflet-popup-content .popup-maps-link {
+				display: inline-block;
+				margin-bottom: 0.4em;
+				color: var(--color-blue);
+				font-size: 1em;
+			}
+
+			.leaflet-popup-content .popup-tags {
+				color: #777;
+				font-size: 1em;
+			}
+
+			.leaflet-popup-content .popup-description {
+				color: #555;
+				font-size: 1em;
+				line-height: 1.5;
+				margin-bottom: 0.5em;
+			}
+
+			#map-list {
+				margin-bottom: 2em;
+				text-align: center;
+			}
+
+			#map-list h3 {
+				margin-bottom: 0.75em;
+				color: var(--color-dark-blue);
+			}
+
+			#map-list h3:not(:first-child) {
+				margin-top: 2em;
+			}
+
+			.place-cards {
+				display: flex;
+				flex-direction: column;
+				gap: 1em;
+				text-align: left;
+				font-size: 0.9em;
+			}
+
+			.place-cards:not(:last-child) {
+				margin-bottom: 1em;
+			}
+
+			.place-card {
+				border: 1px solid var(--color-beige);
+				border-radius: 8px;
+				overflow: hidden;
+			}
+
+			#map-list .place-name {
+				padding: 0.7em 1em;
+				background: var(--color-dark-blue);
+				color: var(--color-white);
+				font-weight: 600;
+			}
+
+			#map-list .tag-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.35em;
+				padding: 0.8em 1em;
+			}
+
+			#map-list .tag-list:empty {
+				display: none;
+			}
+
+			#map-list .tag-pill {
+				display: inline-block;
+				padding: 0.2em 0.65em;
+				border-radius: 12px;
+				color: var(--color-white);
+				font-size: 0.8em;
+				font-weight: 600;
+			}
+
+			.place-view-btn,
+			.place-directions-btn {
+				display: block;
+				width: 100%;
+				line-height: 1;
+				text-align: center;
+				border: none;
+				outline: none;
+				box-shadow: none;
+				background: var(--color-blue);
+				color: var(--color-white);
+				padding: 0.7em 1em;
+				font-weight: 600;
+				font-size: 0.85em;
+				cursor: pointer;
+			}
+
+			#banner header.major > :first-child:after {
+				display: none;
+			}
+
+			#banner header.major {
+				text-align: center;
+			}
+
+			.leaflet-popup-content .popup-preview-link {
+				display: inline-block;
+				margin-bottom: 0.4em;
+				margin-left: 0.75em;
+				color: var(--color-blue);
+				font-size: 1em;
+				font-weight: 600;
+				cursor: pointer;
+				text-decoration: underline;
+				background: none;
+				border: none;
+				padding: 0;
+			}
+
+			body.modal-open {
+				overflow: hidden;
+			}
+
+			#preview-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.9);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 1.5em;
+				z-index: 2000;
+			}
+
+			#preview-modal {
+				position: relative;
+				max-width: 480px;
+				width: 100%;
+				max-height: 85vh;
+				display: flex;
+				flex-direction: column;
+			}
+
+			#preview-header {
+				display: flex;
+				align-items: center;
+				justify-content: flex-end;
+				height: 2.5em;
+				flex-shrink: 0;
+			}
+
+			#preview-close {
+				border: none;
+				outline: none;
+				box-shadow: none;
+				background: none;
+				padding: 0 0.75em;
+				font-size: 2.2em;
+				line-height: 1;
+				color: var(--color-white);
+				cursor: pointer;
+			}
+
+			#preview-card {
+				background: var(--color-white);
+				border-radius: 10px;
+				overflow-y: auto;
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+			}
+
+			#preview-image {
+				display: block;
+				width: 100%;
+				max-height: 260px;
+				object-fit: contain;
+				background: var(--color-white);
+			}
+
+			#preview-image[src=""] {
+				display: none;
+			}
+
+			#preview-body {
+				padding: 1.25em 1.5em 1.5em;
+			}
+
+			#preview-body h3 {
+				margin: 0 0 0.5em 0;
+				color: var(--color-dark-blue);
+			}
+
+			#preview-body a {
+				display: inline-block;
+				margin-bottom: 0.75em;
+				color: var(--color-blue);
+				font-size: 0.9em;
+				font-weight: 600;
+			}
+
+			#preview-body p {
+				margin: 0;
+				color: #555;
+				line-height: 1.6;
+			}
+
+			#preview-gallery {
+				display: flex;
+				gap: 0.5em;
+				flex-wrap: wrap;
+				margin: 0.5em 0 1em;
+			}
+
+			#preview-gallery:empty {
+				display: none;
+			}
+
+			#preview-gallery img {
+				width: 64px;
+				height: 64px;
+				object-fit: cover;
+				border-radius: 6px;
+				cursor: pointer;
+				border: 2px solid transparent;
+				opacity: 0.85;
+				transition: opacity 0.15s, border-color 0.15s;
+			}
+
+			#preview-gallery img:hover {
+				opacity: 1;
+			}
+
+			#preview-gallery img.active {
+				border-color: var(--color-blue);
+				opacity: 1;
+			}
+		</style>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				
+
+				<!-- Banner -->
+				<!-- Note: The "styleN" class below should match that of the header element. -->
+					<section id="banner" class="style2">
+						<div class="inner">
+							<span class="image">
+								<img src="images/monument.png" alt="" />
+							</span>
+							<header class="major">
+								<h1>Discover Ruse like a local!</h1>
+							</header>
+
+						</div>
+					</section>
+
+				<!-- Main -->
+					<div id="main">
+
+						<section id="one">
+							<div class="inner">
+								<div id="dataset-toggle">
+									<button data-dataset="food" class="active">Food &amp; Drinks</button>
+									<button data-dataset="sightseeing">Sightseeing</button>
+									<button data-dataset="souvenirs">Souvenirs</button>
+								</div>
+								<hr class="view-separator" />
+								<div id="view-toggle">
+									<button data-view="map" class="active">Map</button>
+									<button data-view="list">List</button>
+								</div>
+								<hr class="view-separator" />
+								<div id="map-filters"></div>
+								<hr class="view-separator" />
+								<div id="map-list"></div>
+								<div id="map-container"></div>
+							</div>
+						</section>
+
+						<section id="two">
+							<div class="inner">
+								<header class="major">
+									<h2>About This Project</h2>
+								</header>
+								<p>
+									Tourism in Ruse is growing, driven by Danube river cruises and tours, but most existing websites and community groups are built for locals, not visitors - and available tourism sites tend to be outdated or unreliable, focusing mainly on descriptions and photos of landmarks rather than practical guidance. Visitors can find out what to see but rarely how to get there, where to find authentic local food, or which hidden gems are worth exploring - and once the standard city-center tour ends, many tourists don't know where to go next, with language barriers making it harder to ask for directions or recommendations.
+								</p>
+								<p>
+									This project aims to build an interactive map that helps visitors explore the city with confidence - showing landmarks, local restaurants, cafés, bars, and other authentic experiences. Rather than just listing attractions, it focuses on helping tourists understand how to get to a place, what to expect there, and how to discover local culture beyond the standard tourist routes.
+								</p>
+							</div>
+						</section>
+
+						<section id="getting-there">
+							<div class="inner">
+								<header class="major">
+									<h2>How to Get There</h2>
+								</header>
+								<p>
+									Ruse has no international airport of its own, so the closest and most convenient option for most visitors is <strong><a href="https://en.wikipedia.org/wiki/Bucharest_Henri_Coand%C4%83_International_Airport" target="_blank">Bucharest Henri Coandă International Airport (OTP)</a></strong> in Romania, roughly 1.5-2 hours away. From there, you can arrange transport across the border to Ruse - for example:
+								</p>
+								<p>
+									<a href="https://pegasusbg.com/" target="_blank">Pegasus</a> · <a href="https://www.to4nite.com/" target="_blank">To4Nite</a>
+								</p>
+							</div>
+						</section>
+
+						<section id="three">
+							<div class="inner">
+								<header class="major">
+									<h2>Know a Place We're Missing?</h2>
+								</header>
+								<p>
+									If you'd like to suggest a new location to add to the map, <a href="https://docs.google.com/forms/d/e/1FAIpQLSerE7ZOCm5GfYbD8EhIkam3YokFqII0qZaEsE7hlLQT8CZpAw/viewform?usp=sharing&ouid=109573445036501785751" target="_blank">fill out this form</a>.
+								</p>
+							</div>
+						</section>
+
+					</div>
+
+				<!-- Footer -->
+				<footer id="footer"></footer>
+
+			</div>
+
+			<!-- Preview modal -->
+			<div id="preview-overlay" class="view-hidden">
+				<div id="preview-modal">
+					<div id="preview-header">
+						<button type="button" id="preview-close" aria-label="Close">&times;</button>
+					</div>
+					<div id="preview-card">
+					<img id="preview-image" src="" alt="" />
+					<div id="preview-body">
+						<h3 id="preview-name"></h3>
+						<div id="preview-gallery"></div>
+						<a id="preview-maps-link" href="#" target="_blank" rel="noopener noreferrer">How to get there?</a>
+						<p id="preview-description"></p>
+					</div>
+				</div>
+			</div>
+			</div>
+
+		<!-- Scripts -->
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+
+		<!-- Utils -->
+		<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+		<script src="assets/js/components/footer.js"></script>
+
+		<!-- Leaflet -->
+		<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+			integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+		<script src="assets/js/map.js"></script>
+
+	</body>
+</html>
