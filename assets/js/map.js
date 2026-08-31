@@ -26,7 +26,7 @@ const DATASETS = {
 	},
 	sightseeing: {
 		url: "https://raw.githubusercontent.com/logos-circle-ruse/data/refs/heads/main/website/interactive-ruse/sightseeing.json",
-		groupBy: null,
+		groupBy: "category",
 		tagColours: {
 			museum: "#79A1E8",
 			history: "#2a2f4a",
@@ -48,7 +48,7 @@ const DATASETS = {
 			"public building": "#5d6d7e",
 			commerce: "#b9770e",
 			bank: "#1abc9c",
-			religious: "#9b59b6",
+			religion: "#9b59b6",
 			industry: "#7f8c8d",
 			insurance: "#2980b9",
 			theater: "#c2185b"
@@ -75,14 +75,48 @@ function markerIcon(colour) {
 	});
 }
 
-// Generous bounding box around Ruse, Bulgaria — used to reject bad/mistyped
-// coordinates (e.g. a data entry pointing at a different city) so a single
-// outlier can't blow out the map's zoom/bounds for everyone else.
-const RUSE_BOUNDS = { minLat: 43.6, maxLat: 44.1, minLon: 25.5, maxLon: 26.4 };
+const RUSE_BOUNDS = { 
+	minLat: 43.6, 
+	maxLat: 44.1, 
+	minLon: 25.5, 
+	maxLon: 26.4 
+};
 
-async function loadPlaces(url) {
+function readCache(url) {
+	const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+	try {
+		const raw = localStorage.getItem(`places-cache:${url}`);
+		if (!raw) return null;
+
+		const { timestamp, data } = JSON.parse(raw);
+		if (Date.now() - timestamp > CACHE_TTL_MS) return null;
+
+		return data;
+	} catch {
+		return null;
+	}
+}
+
+function writeCache(url, data) {
+	try {
+		localStorage.setItem(`places-cache:${url}`, JSON.stringify({ timestamp: Date.now(), data }));
+	} catch {
+		// Storage full or unavailable — caching is a nice-to-have, so ignore.
+	}
+}
+
+async function fetchPlacesData(url) {
+	const cached = readCache(url);
+	if (cached) return cached;
+
 	const res = await fetch(url);
 	const data = await res.json();
+	writeCache(url, data);
+	return data;
+}
+
+async function loadPlaces(url) {
+	const data = await fetchPlacesData(url);
 	return data.filter(place =>
 		place.latitude != null && place.longitude != null &&
 		place.latitude >= RUSE_BOUNDS.minLat && place.latitude <= RUSE_BOUNDS.maxLat &&
